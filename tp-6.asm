@@ -19,3 +19,20 @@
 ; • Destinoi – Objeto1 (P1) + Objeto2 (P2)+ ..... + Objeton (Pn)
 ; • Destinoi – Objeto1 (P1) + Objeto2 (P2)+ ..... + Objeton (Pn)
 ; • Destinoi – Objeto1 (P1) + Objeto2 (P2)+ ..... + Objeton (Pn)
+
+global main
+extern printf
+
+section     .data
+    mensaje1 db "Numero: %li",10,0
+    vector dq 321,32,23,12,34
+    contador dq 0
+
+section     .bss
+
+
+section     .text
+main:
+
+
+ret
