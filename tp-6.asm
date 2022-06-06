@@ -31,14 +31,18 @@ section     .data
     mensaje_destino_invalido        db "El destino no es valido. Los posibles destinos son Mar del Plata(M), Bariloche(B) y Posadas(P). Intente nuevamente:",0
     mensaje_ingresar_peso           db "Ingrese el peso del paquete. EL peso deberia estar entre el 1 y 11 inclusive:",0
     mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11). Intente nuevamente:",0
-    mensaje_ingresar_mas_paquetes   db "Desea ingresar algun paquete mas? S/N (Si no se reconoce el inut se considera un No):",0
+    mensaje_ingresar_mas_paquetes   db "Desea ingresar algun paquete mas? S a otro destino M mismo destino F finalizar programa:",0
     formato_peso                    db "%lli"
-    mensaje_mdq                     db "Mar del Plata",0
-    mensaje1                        db " %lli -",0
+    mensaje_primer_numero           db "%lli",0
+    mensaje_numero                  db " - %lli",0
+    mensaje_salto_linea             db "",10,0
+    mensaje_mdq                     db "> Mar del Plata: ",0
     vector_mdq      times 100       dq 0
     posiscion_mdq                   dq 0
+    mensaje_bar                     db "> Bariloche: ",0
     vector_bar      times 100       dq 0
     posiscion_bar                   dq 0
+    mensaje_pos                     db "> Posadas: ",0
     vector_pos      times 100       dq 0
     posiscion_pos                   dq 0   
     testmen db "No puede ser",0
@@ -93,14 +97,13 @@ ingresoPeso:
     cmp rax,0
     je ingresoPeso
 
-    cmp destino,"M"
+    cmp byte[destino],"M"
     je agregarPaqueteMDQ
-    cmp destino,"B"
+    cmp byte[destino],"B"
     je agregarPaqueteBAR  
-    cmp destino,"P"
+    cmp byte[destino],"P"
     je agregarPaquetePOS  
         
-
 siguientePaquete:
     mov rcx,mensaje_ingresar_mas_paquetes
     sub rsp,32
@@ -115,34 +118,80 @@ siguientePaquete:
     cmp byte[input],"S"
     je main
 
+    ; Imprimo lo del destino Mar del Plata
+    mov rcx,posiscion_mdq
+    mov rdx,vector_mdq
+    mov r8,mensaje_mdq
+    call imprimirDestino
+
+    ; Imprimo lo del destino Bariloche
+    mov rcx,posiscion_bar
+    mov rdx,vector_bar
+    mov r8,mensaje_bar
+    call imprimirDestino
+
+    ; Imprimo lo del destino Posadas
+    mov rcx,posiscion_pos
+    mov rdx,vector_pos
+    mov r8,mensaje_pos
     call imprimirDestino
     
     ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                             ;
+;          IMPRIMIR VECORES DESTINOS          ;
+;                                             ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 imprimirDestino:
-    mov rcx,mensaje_mdq
+    ; En rcx = tamaño_vector , rdx= ptr_vector y r8=destino
+    mov rdi,rcx
+    mov rsi,0
+    mov rbx,rdx
+
+    ; Imprimo el destino
+    mov rcx,r8
     sub rsp,32
     call printf
     add rsp,32
 
-    mov rsi,0
-loop_vector:
-    mov rcx,mensaje1
-    mov rdx,[vector_mdq+rsi*8]
+    ;Reviso si el destino tiene al menos un paquete
+    cmp rsi,qword[rdi]
+    je fin_imprimir_destino
+
+    ; Imprimo el peso del primer paquete que tiene un formato distinto
+    mov rcx,mensaje_primer_numero
+    mov rdx,[rbx]
     sub rsp,32
     call printf
     add rsp,32
 
     inc rsi
-    cmp rsi,[posiscion_mdq]
-    jne loop_vector
+    cmp rsi,qword[rdi]
+    je fin_imprimir_destino
+
+loop_vector:
+    mov rcx,mensaje_numero   ; Formato printf: %lli
+    mov rdx,[rbx + rsi*8]    ; Peso a imprimir
+    sub rsp,32
+    call printf
+    add rsp,32
+
+    inc rsi                  ; Aumento el indice al vector
+    cmp rsi,qword[rdi]       ; Comparo con el tamaño del vector
+    jne loop_vector          ; Si no es el mismo vuelvo al arranque del loop
+
+fin_imprimir_destino:
+    mov rcx,mensaje_salto_linea
+    sub rsp,32
+    call printf
+    add rsp,32
 
     ret
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
-;               VALIDAR PESO                 ;
+;                VALIDAR PESO                ;
 ;                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 validarPeso:
