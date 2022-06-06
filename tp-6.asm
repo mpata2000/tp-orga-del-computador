@@ -33,14 +33,15 @@ section     .data
     mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11). Intente nuevamente:",0
     mensaje_ingresar_mas_paquetes   db "Desea ingresar algun paquete mas? S/N (Si no se reconoce el inut se considera un No):",0
     formato_peso                    db "%lli"
-    mensaje1                        db " %lli ",10
-    mensaje_mdq                     db "Mar del Plata:",10
+    mensaje_mdq                     db "Mar del Plata",0
+    mensaje1                        db " %lli -",0
     vector_mdq      times 100       dq 0
     posiscion_mdq                   dq 0
     vector_bar      times 100       dq 0
     posiscion_bar                   dq 0
     vector_pos      times 100       dq 0
     posiscion_pos                   dq 0   
+    testmen db "No puede ser",0
 
 section     .bss
     input    resb   500    
@@ -89,10 +90,18 @@ ingresoPeso:
 
     call validarPeso
     cmp rax,0
+    cmp rax,0
     je ingresoPeso
 
-    call agregarPaqueteMDQ    
+    cmp destino,"M"
+    je agregarPaqueteMDQ
+    cmp destino,"B"
+    je agregarPaqueteBAR  
+    cmp destino,"P"
+    je agregarPaquetePOS  
+        
 
+siguientePaquete:
     mov rcx,mensaje_ingresar_mas_paquetes
     sub rsp,32
     call puts
@@ -107,7 +116,7 @@ ingresoPeso:
     je main
 
     call imprimirDestino
-finPrograma:
+    
     ret
 
 imprimirDestino:
@@ -116,16 +125,16 @@ imprimirDestino:
     call printf
     add rsp,32
 
-    mov rdi,0
+    mov rsi,0
 loop_vector:
     mov rcx,mensaje1
-    mov rdx,[vector_mdq+rdi*8]
+    mov rdx,[vector_mdq+rsi*8]
     sub rsp,32
     call printf
     add rsp,32
-    inc rdi
-    ; cmp rdi,[longi]  puedo ver de comparar la lungitud
-    cmp qword[vector_mdq+rdi*8],0
+
+    inc rsi
+    cmp rsi,[posiscion_mdq]
     jne loop_vector
 
     ret
@@ -184,6 +193,23 @@ agregarPaqueteMDQ:
     mov [vector_mdq + rdi*8],rdx
     inc rdi
     mov [posiscion_mdq],rdi
+    jmp siguientePaquete
+
+agregarPaqueteBAR:
+    mov rdi,[posiscion_bar]
+    mov rdx,[peso]
+    mov [vector_bar + rdi*8],rdx
+    inc rdi
+    mov [posiscion_bar],rdi
+    jmp siguientePaquete
+    
+agregarPaquetePOS:
+    mov rdi,[posiscion_pos]
+    mov rdx,[peso]
+    mov [vector_pos + rdi*8],rdx
+    inc rdi
+    mov [posiscion_pos],rdi
+    jmp siguientePaquete
 
 
 
