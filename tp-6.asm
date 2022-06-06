@@ -27,25 +27,34 @@ extern gets
 extern sscanf
 
 section     .data
-    mensaje_ingresar_destino    db "Ingrese el destino:",0
-    mensaje_destino_invalido    db "El destino no es valido. Los posibles destinos son Mar del Plata(M), Bariloche(B) y Posadas(P). Intente nuevamente:",0
-    formato_destino             db "%c"
-    mensaje_ingresar_peso       db "Ingrese un numero etre el 1 y 11 inclusive",0
-    mensaje_peso_invalido       db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11). Intente nuevamente:",0
-    formato_peso                db "%i"
-    mensaje1                    db "Numero: %lli",10,0
+    mensaje_ingresar_destino        db "Ingrese el destino. Los posibles destinos son Mar del Plata(M), Bariloche(B) y Posadas(P):",0
+    mensaje_destino_invalido        db "El destino no es valido. Los posibles destinos son Mar del Plata(M), Bariloche(B) y Posadas(P). Intente nuevamente:",0
+    mensaje_ingresar_peso           db "Ingrese el peso del paquete. EL peso deberia estar entre el 1 y 11 inclusive:",0
+    mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11). Intente nuevamente:",0
+    mensaje_ingresar_mas_paquetes   db "Desea ingresar algun paquete mas? S/N (Si no se reconoce el inut se considera un No):",0
+    formato_peso                    db "%lli"
+    mensaje1                        db " %lli ",10
+    mensaje_mdq                     db "Mar del Plata:",10
+    vector_mdq      times 100       dq 0
+    posiscion_mdq                   dq 0
+    vector_bar      times 100       dq 0
+    posiscion_bar                   dq 0
+    vector_pos      times 100       dq 0
+    posiscion_pos                   dq 0   
 
 section     .bss
     input    resb   500    
     destino  resb   1
-    peso     resd   1
+    peso     resq   1
 
 section     .text
 main:
+
     mov rcx,mensaje_ingresar_destino
     sub rsp,32
     call puts
     add rsp,32
+
 ingresarDestino:
     mov rcx,input
     sub rsp,32
@@ -55,14 +64,6 @@ ingresarDestino:
     ;paso primer caracter a destino
     mov ah,[input]
     mov byte[destino],ah
-
-    ;mov rcx,input
-    ;mov rdx,formato_destino
-    ;mov r8,destino
-    ;sub rsp,32
-    ;call sscanf
-    ;add rsp,32
-    
 
     call validarDestino
     cmp rax,0
@@ -90,13 +91,66 @@ ingresoPeso:
     cmp rax,0
     je ingresoPeso
 
-    mov rcx,mensaje1
-    mov rdx,[peso]
+    call agregarPaqueteMDQ    
+
+    mov rcx,mensaje_ingresar_mas_paquetes
+    sub rsp,32
+    call puts
+    add rsp,32
+
+    mov rcx,input
+    sub rsp,32
+    call gets
+    add rsp,32
+    
+    cmp byte[input],"S"
+    je main
+
+    call imprimirDestino
+finPrograma:
+    ret
+
+imprimirDestino:
+    mov rcx,mensaje_mdq
     sub rsp,32
     call printf
     add rsp,32
 
-finPrograma:
+    mov rdi,0
+loop_vector:
+    mov rcx,mensaje1
+    mov rdx,[vector_mdq+rdi*8]
+    sub rsp,32
+    call printf
+    add rsp,32
+    inc rdi
+    ; cmp rdi,[longi]  puedo ver de comparar la lungitud
+    cmp qword[vector_mdq+rdi*8],0
+    jne loop_vector
+
+    ret
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                            ;
+;               VALIDAR PESO                 ;
+;                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+validarPeso:
+    ;verificando que 0<Pi<=11, devuelve rax=1 valido o rax=0 si es invalido
+    mov rax,1
+    cmp qword[peso],0
+    jle pesoInvalido ;Si es menor igual a 0 es invalido
+    cmp qword[peso],11
+    jg pesoInvalido
+    ret
+pesoInvalido:
+    ;Peso no es valido
+    mov rcx,mensaje_peso_invalido
+    sub rsp,32
+    call puts
+    add rsp,32
+    mov rax,0
     ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -123,27 +177,14 @@ validarDestino:
 destinoValido:
     mov rax,1
     ret
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                            ;
-;               VALIDAR PESO                 ;
-;                                            ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-validarPeso:
-    ;verificando que 0<Pi<=11, devuelve rax=1 valido o rax=0 si es invalido
-    mov rax,1
-    cmp dword[peso],0
-    jle pesoInvalido ;Si es menor igual a 0 es invalido
-    cmp dword[peso],11
-    jg pesoInvalido
-    ret
-pesoInvalido:
-    ;Peso no es valido
-    mov rcx,mensaje_peso_invalido
-    sub rsp,32
-    call puts
-    add rsp,32
-    mov rax,0
-    ret
+
+agregarPaqueteMDQ:
+    mov rdi,[posiscion_mdq]
+    mov rdx,[peso]
+    mov [vector_mdq + rdi*8],rdx
+    inc rdi
+    mov [posiscion_mdq],rdi
+
 
 
 
