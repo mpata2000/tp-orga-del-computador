@@ -1,3 +1,4 @@
+AS = nasm
 CC = gcc
 NASMFLAGS = win64
 MAIN = tp-6.asm
@@ -5,14 +6,12 @@ OBJETO = tp-6.o
 EXEC = tp-6.exe
 FILES = tp-6.asm makefile  README.md
 
-$(OBJETO):
-	nasm -f $(NASMFLAGS) $(MAIN) -o $(OBJETO)
-
-$(EXEC): $(OBJETO)
+compile:
+	$(AS) -f $(NASMFLAGS) $(MAIN) -o $(OBJETO)
 	$(CC) ./$(OBJETO) -o $(EXEC)
 
 .PHONY: run
-run: clean $(EXEC)
+run: compile
 	- ./$(EXEC)
 
 zip: 
