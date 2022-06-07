@@ -34,7 +34,11 @@ section     .data
                                     db "|  > [P] Posadas                                 |",10,
                                     db "'------------------------------------------------'",10,
                                     db "Input: ",0
-    mensaje_destino_invalido        db "El destino no es valido. Los posibles destinos son Mar del Plata(M), Bariloche(B) y Posadas(P). Intente nuevamente:",0
+    mensaje_destino_invalido        db "El destino no es valido. Los posibles destinos son:",10,
+                                    db " > [M] Mar del Plata                               ",10,
+                                    db " > [B] Bariloche                                   ",10,
+                                    db " > [P] Posadas                                     ",10,
+                                    db "Intente nuevamente: ",0
     mensaje_ingresar_peso           db ",-----------------------------------------------------------,",10,
                                     db "| Ingrese el peso del paquete con destino a [%c]             |",10,
                                     db "| El peso deberia estar entre el 1 y 11 inclusive (0<p<=11) |",10,
@@ -61,7 +65,8 @@ section     .data
     posiscion_bar                   dq 0
     mensaje_pos                     db "> Posadas: ",0
     vector_pos      times 100       dq 0
-    posiscion_pos                   dq 0   
+    posiscion_pos                   dq 0
+    mensaje_final                   db "Los siguientes paquetes seran enviados a sus correspondientes destinos:",0
 
 section     .bss
     input    resb   500    
@@ -134,6 +139,10 @@ ingresoPeso:
 
     call clearScreen
 
+    mov rcx,mensaje_final
+    sub rsp,32
+    call puts
+    add rsp,32
     ; Imprimo lo del destino Mar del Plata
     mov rcx,posiscion_mdq
     mov rdx,vector_mdq
@@ -155,6 +164,11 @@ ingresoPeso:
     
     ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                            ;
+;                CLEAR SCREEN                ;
+;                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 clearScreen:
     mov rdi,25
     clear:
@@ -165,8 +179,7 @@ clearScreen:
         dec rdi
         cmp rdi,0
         jne clear
-    ret
-    
+    ret    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
 ;                VALIDAR PESO                ;
@@ -184,7 +197,7 @@ pesoInvalido:
     ;Peso no es valido
     mov rcx,mensaje_peso_invalido
     sub rsp,32
-    call puts
+    call printf
     add rsp,32
     mov rax,0
     ret
@@ -207,7 +220,7 @@ validarDestino:
     ;Destino no es valido
     mov rcx,mensaje_destino_invalido
     sub rsp,32
-    call puts
+    call printf
     add rsp,32
     ret
 destinoValido:
@@ -234,15 +247,13 @@ agregarPaqueteMDQ:
     inc rdi
     mov [posiscion_mdq],rdi
     ret
-
 agregarPaqueteBAR:
     mov rdi,[posiscion_bar]
     mov rdx,[peso]
     mov [vector_bar + rdi*8],rdx
     inc rdi
     mov [posiscion_bar],rdi
-    ret
-    
+    ret    
 agregarPaquetePOS:
     mov rdi,[posiscion_pos]
     mov rdx,[peso]
