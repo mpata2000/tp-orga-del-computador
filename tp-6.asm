@@ -36,18 +36,19 @@ section     .data
                                     db "Input: ",0
     mensaje_destino_invalido        db "El destino no es valido. Los posibles destinos son Mar del Plata(M), Bariloche(B) y Posadas(P). Intente nuevamente:",0
     mensaje_ingresar_peso           db ",-----------------------------------------------------------,",10,
-                                    db "| Ingrese el peso del paquete.                              |",10,
+                                    db "| Ingrese el peso del paquete con destino a [%c]             |",10,
                                     db "| El peso deberia estar entre el 1 y 11 inclusive (0<p<=11) |",10,
                                     db "'-----------------------------------------------------------'",10,
                                     db "Input: ",0
-    mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11). Intente nuevamente:",0
+    mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11).",10,
+                                    db "Intente nuevamente:",0
     mensaje_ingresar_mas_paquetes   db ",----------------------------------------------------,",10
                                     db "| Desea ingresar algun paquete mas?                  |",10
                                     db "|  > S nuevo paquete a otro destino                  |",10
                                     db "|  > M nuevo paquete al mismo destino                |",10,
                                     db "|  > Cualquier otro caracter para finalizar programa |",10,
                                     db "'----------------------------------------------------'",10,
-                                    db "  Input: ",0
+                                    db "Input: ",0
     formato_peso                    db "%lli"
     mensaje_primer_numero           db "%lli",0
     mensaje_numero                  db " - %lli",0
@@ -91,6 +92,7 @@ ingresarDestino:
 
 ingresoPesoMensaje:
     mov rcx,mensaje_ingresar_peso
+    mov rdx,[destino]
     sub rsp,32
     call printf
     add rsp,32
@@ -130,6 +132,8 @@ ingresoPeso:
     cmp byte[input],"M"
     je ingresoPesoMensaje
 
+    call clearScreen
+
     ; Imprimo lo del destino Mar del Plata
     mov rcx,posiscion_mdq
     mov rdx,vector_mdq
@@ -147,58 +151,20 @@ ingresoPeso:
     mov rdx,vector_pos
     mov r8,mensaje_pos
     call imprimirDestino
+    call clearScreen
     
     ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                             ;
-;          IMPRIMIR VECORES DESTINOS          ;
-;                                             ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-imprimirDestino:
-    ; En rcx = tamaño_vector , rdx= ptr_vector y r8=destino
-    mov rdi,rcx
-    mov rsi,0
-    mov rbx,rdx
-
-    ; Imprimo el destino
-    mov rcx,r8
-    sub rsp,32
-    call printf
-    add rsp,32
-
-    ;Reviso si el destino tiene al menos un paquete
-    cmp rsi,qword[rdi]
-    je fin_imprimir_destino
-
-    ; Imprimo el peso del primer paquete que tiene un formato distinto
-    mov rcx,mensaje_primer_numero
-    mov rdx,[rbx]
-    sub rsp,32
-    call printf
-    add rsp,32
-
-    inc rsi
-    cmp rsi,qword[rdi]
-    je fin_imprimir_destino
-
-loop_vector:
-    mov rcx,mensaje_numero   ; Formato printf: %lli
-    mov rdx,[rbx + rsi*8]    ; Peso a imprimir
-    sub rsp,32
-    call printf
-    add rsp,32
-
-    inc rsi                  ; Aumento el indice al vector
-    cmp rsi,qword[rdi]       ; Comparo con el tamaño del vector
-    jne loop_vector          ; Si no es el mismo vuelvo al arranque del loop
-
-fin_imprimir_destino:
-    mov rcx,mensaje_salto_linea
-    sub rsp,32
-    call printf
-    add rsp,32
-
+clearScreen:
+    mov rdi,25
+    clear:
+        mov rcx,mensaje_salto_linea
+        sub rsp,32
+        call printf
+        add rsp,32    
+        dec rdi
+        cmp rdi,0
+        jne clear
     ret
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -283,6 +249,57 @@ agregarPaquetePOS:
     mov [vector_pos + rdi*8],rdx
     inc rdi
     mov [posiscion_pos],rdi
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                             ;
+;          IMPRIMIR VECORES DESTINOS          ;
+;                                             ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+imprimirDestino:
+    ; En rcx = tamaño_vector , rdx= ptr_vector y r8=destino
+    mov rdi,rcx
+    mov rsi,0
+    mov rbx,rdx
+
+    ; Imprimo el destino
+    mov rcx,r8
+    sub rsp,32
+    call printf
+    add rsp,32
+
+    ;Reviso si el destino tiene al menos un paquete
+    cmp rsi,qword[rdi]
+    je fin_imprimir_destino
+
+    ; Imprimo el peso del primer paquete que tiene un formato distinto
+    mov rcx,mensaje_primer_numero
+    mov rdx,[rbx]
+    sub rsp,32
+    call printf
+    add rsp,32
+
+    inc rsi
+    cmp rsi,qword[rdi]
+    je fin_imprimir_destino
+
+loop_vector:
+    mov rcx,mensaje_numero   ; Formato printf: %lli
+    mov rdx,[rbx + rsi*8]    ; Peso a imprimir
+    sub rsp,32
+    call printf
+    add rsp,32
+
+    inc rsi                  ; Aumento el indice al vector
+    cmp rsi,qword[rdi]       ; Comparo con el tamaño del vector
+    jne loop_vector          ; Si no es el mismo vuelvo al arranque del loop
+
+fin_imprimir_destino:
+    mov rcx,mensaje_salto_linea
+    sub rsp,32
+    call printf
+    add rsp,32
+
     ret
 
 
