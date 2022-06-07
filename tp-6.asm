@@ -27,11 +27,27 @@ extern gets
 extern sscanf
 
 section     .data
-    mensaje_ingresar_destino        db "Ingrese el destino. Los posibles destinos son Mar del Plata(M), Bariloche(B) y Posadas(P):",0
+    mensaje_ingresar_destino        db ",------------------------------------------------,",10,
+                                    db "| Ingrese el destino. Los posibles destinos son: |",10,
+                                    db "|  > [M] Mar del Plata                           |",10,
+                                    db "|  > [B] Bariloche                               |",10,
+                                    db "|  > [P] Posadas                                 |",10,
+                                    db "'------------------------------------------------'",10,
+                                    db "Input: ",0
     mensaje_destino_invalido        db "El destino no es valido. Los posibles destinos son Mar del Plata(M), Bariloche(B) y Posadas(P). Intente nuevamente:",0
-    mensaje_ingresar_peso           db "Ingrese el peso del paquete. EL peso deberia estar entre el 1 y 11 inclusive:",0
+    mensaje_ingresar_peso           db ",-----------------------------------------------------------,",10,
+                                    db "| Ingrese el peso del paquete.                              |",10,
+                                    db "| El peso deberia estar entre el 1 y 11 inclusive (0<p<=11) |",10,
+                                    db "'-----------------------------------------------------------'",10,
+                                    db "Input: ",0
     mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11). Intente nuevamente:",0
-    mensaje_ingresar_mas_paquetes   db "Desea ingresar algun paquete mas? S a otro destino M mismo destino F finalizar programa:",0
+    mensaje_ingresar_mas_paquetes   db ",----------------------------------------------------,",10
+                                    db "| Desea ingresar algun paquete mas?                  |",10
+                                    db "|  > S nuevo paquete a otro destino                  |",10
+                                    db "|  > M nuevo paquete al mismo destino                |",10,
+                                    db "|  > Cualquier otro caracter para finalizar programa |",10,
+                                    db "'----------------------------------------------------'",10,
+                                    db "  Input: ",0
     formato_peso                    db "%lli"
     mensaje_primer_numero           db "%lli",0
     mensaje_numero                  db " - %lli",0
@@ -45,7 +61,6 @@ section     .data
     mensaje_pos                     db "> Posadas: ",0
     vector_pos      times 100       dq 0
     posiscion_pos                   dq 0   
-    testmen db "No puede ser",0
 
 section     .bss
     input    resb   500    
@@ -57,7 +72,7 @@ main:
 
     mov rcx,mensaje_ingresar_destino
     sub rsp,32
-    call puts
+    call printf
     add rsp,32
 
 ingresarDestino:
@@ -73,10 +88,11 @@ ingresarDestino:
     call validarDestino
     cmp rax,0
     je ingresarDestino ;Si el destino no es valido se lo vuelve a pedir
-    
+
+ingresoPesoMensaje:
     mov rcx,mensaje_ingresar_peso
     sub rsp,32
-    call puts
+    call printf
     add rsp,32
 
 ingresoPeso:
@@ -95,19 +111,13 @@ ingresoPeso:
     call validarPeso
     cmp rax,0
     cmp rax,0
-    je ingresoPeso
+    je ingresoPeso ;Si el peso es p<=0 o p>11 pido devuelta un peso valido
 
-    cmp byte[destino],"M"
-    je agregarPaqueteMDQ
-    cmp byte[destino],"B"
-    je agregarPaqueteBAR  
-    cmp byte[destino],"P"
-    je agregarPaquetePOS  
+    call agregarPaqueteADestino
         
-siguientePaquete:
     mov rcx,mensaje_ingresar_mas_paquetes
     sub rsp,32
-    call puts
+    call printf
     add rsp,32
 
     mov rcx,input
@@ -117,6 +127,8 @@ siguientePaquete:
     
     cmp byte[input],"S"
     je main
+    cmp byte[input],"M"
+    je ingresoPesoMensaje
 
     ; Imprimo lo del destino Mar del Plata
     mov rcx,posiscion_mdq
@@ -217,7 +229,7 @@ pesoInvalido:
 ;                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 validarDestino:
-    ;Destinos: Mar del Plata(M), Bariloche(B) y Posadas(P), 
+    ;Destinos: Mar del Plata(M), Bariloche(B) y Posadas(P), devuelve rax 0 si es invalido o 1 si es valido
     mov rax,0
     cmp byte[destino],"M"
     je destinoValido
@@ -236,13 +248,26 @@ destinoValido:
     mov rax,1
     ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                            ;
+;             AGREGAR A PAQUETE              ;
+;                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+agregarPaqueteADestino:
+    cmp byte[destino],"M"
+    je agregarPaqueteMDQ
+    cmp byte[destino],"B"
+    je agregarPaqueteBAR  
+    cmp byte[destino],"P"
+    je agregarPaquetePOS
+
 agregarPaqueteMDQ:
     mov rdi,[posiscion_mdq]
     mov rdx,[peso]
     mov [vector_mdq + rdi*8],rdx
     inc rdi
     mov [posiscion_mdq],rdi
-    jmp siguientePaquete
+    ret
 
 agregarPaqueteBAR:
     mov rdi,[posiscion_bar]
@@ -250,7 +275,7 @@ agregarPaqueteBAR:
     mov [vector_bar + rdi*8],rdx
     inc rdi
     mov [posiscion_bar],rdi
-    jmp siguientePaquete
+    ret
     
 agregarPaquetePOS:
     mov rdi,[posiscion_pos]
@@ -258,7 +283,7 @@ agregarPaquetePOS:
     mov [vector_pos + rdi*8],rdx
     inc rdi
     mov [posiscion_pos],rdi
-    jmp siguientePaquete
+    ret
 
 
 
