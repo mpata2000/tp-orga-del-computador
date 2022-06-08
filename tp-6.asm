@@ -45,7 +45,7 @@ section     .data
                                     db "'-----------------------------------------------------------'",10,
                                     db "Input: ",0
     mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11).",10,
-                                    db "Intente nuevamente:",0
+                                    db "Intente nuevamente: ",0
     mensaje_ingresar_mas_paquetes   db ",----------------------------------------------------,",10
                                     db "| Desea ingresar algun paquete mas?                  |",10
                                     db "|  > S nuevo paquete a otro destino                  |",10
@@ -82,6 +82,8 @@ main:
     add rsp,32
 
 ingresarDestino:
+    mov byte[destino],0
+    mov byte[input],0
     mov rcx,input
     sub rsp,32
     call gets
@@ -91,7 +93,9 @@ ingresarDestino:
     mov ah,[input]
     mov byte[destino],ah
 
+    sub rsp,32
     call validarDestino
+    add rsp,32
     cmp rax,0
     je ingresarDestino ;Si el destino no es valido se lo vuelve a pedir
 
@@ -170,7 +174,7 @@ ingresoPeso:
 ;                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 clearScreen:
-    mov rdi,25
+    mov rdi,5
     clear:
         mov rcx,mensaje_salto_linea
         sub rsp,32
@@ -180,6 +184,30 @@ clearScreen:
         cmp rdi,0
         jne clear
     ret    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                            ;
+;             VALIDAR DESTINO                ;
+;                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+validarDestino:
+    ;Destinos: Mar del Plata(M), Bariloche(B) y Posadas(P), devuelve rax 0 si es invalido o 1 si es valido
+    cmp byte[destino],"M"
+    je destinoValido
+    cmp byte[destino],"B"
+    je destinoValido
+    cmp byte[destino],"P"
+    je destinoValido
+    ;Destino no es valido
+    mov rcx,mensaje_destino_invalido
+    sub rsp,32
+    call printf
+    add rsp,32
+
+    mov rax,0 ;Lo tengo que poner abajo del call de printf porque o si no por algun motivo no se guarda bien
+    ret
+destinoValido:
+    mov rax,1
+    ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
 ;                VALIDAR PESO                ;
@@ -202,30 +230,6 @@ pesoInvalido:
     mov rax,0
     ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                            ;
-;             VALIDAR DESTINO                ;
-;                                            ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-validarDestino:
-    ;Destinos: Mar del Plata(M), Bariloche(B) y Posadas(P), devuelve rax 0 si es invalido o 1 si es valido
-    mov rax,0
-    cmp byte[destino],"M"
-    je destinoValido
-    cmp byte[destino],"B"
-    je destinoValido
-    cmp byte[destino],"P"
-    je destinoValido
-
-    ;Destino no es valido
-    mov rcx,mensaje_destino_invalido
-    sub rsp,32
-    call printf
-    add rsp,32
-    ret
-destinoValido:
-    mov rax,1
-    ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
@@ -233,13 +237,11 @@ destinoValido:
 ;                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 agregarPaqueteADestino:
-    cmp byte[destino],"M"
-    je agregarPaqueteMDQ
     cmp byte[destino],"B"
     je agregarPaqueteBAR  
     cmp byte[destino],"P"
     je agregarPaquetePOS
-
+    ;Si no es ninguno de los 2 es mdq
 agregarPaqueteMDQ:
     mov rdi,[posiscion_mdq]
     mov rdx,[peso]
@@ -261,6 +263,7 @@ agregarPaquetePOS:
     inc rdi
     mov [posiscion_pos],rdi
     ret
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                             ;
