@@ -27,6 +27,13 @@ extern gets
 extern sscanf
 
 section     .data
+    mensaje_ingresar_objetos        db ",-----------------------------------------------------------,",10,
+                                    db "| Ingrese la cantidad de objetos que quiere enviar          |",10,
+                                    db "| Puede enviar de 1 a 20 objetos (0<n<=20)                  |",10,
+                                    db "'-----------------------------------------------------------'",10,
+                                    db "Input: ",0
+    mensaje_objetos_invalido        db "La cantidad de objetos no es valida. Se pueden enviar de 1 a 20 objetos (0<n<=20)",10,
+                                    db "Intente nuevamente: ",0
     mensaje_ingresar_destino        db ",------------------------------------------------,",10,
                                     db "| Ingrese el destino. Los posibles destinos son: |",10,
                                     db "|  > [M] Mar del Plata                           |",10,
@@ -40,20 +47,13 @@ section     .data
                                     db " > [P] Posadas                                     ",10,
                                     db "Intente nuevamente: ",0
     mensaje_ingresar_peso           db ",-----------------------------------------------------------,",10,
-                                    db "| Ingrese el peso del paquete con destino a [%c]             |",10,
+                                    db "| Ingrese el peso del objeto con destino a [%c]              |",10,
                                     db "| El peso deberia estar entre el 1 y 11 inclusive (0<p<=11) |",10,
                                     db "'-----------------------------------------------------------'",10,
                                     db "Input: ",0
     mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11).",10,
                                     db "Intente nuevamente: ",0
-    mensaje_ingresar_mas_paquetes   db ",----------------------------------------------------,",10
-                                    db "| Desea ingresar algun paquete mas?                  |",10
-                                    db "|  > S nuevo paquete a otro destino                  |",10
-                                    db "|  > M nuevo paquete al mismo destino                |",10,
-                                    db "|  > Cualquier otro caracter para finalizar programa |",10,
-                                    db "'----------------------------------------------------'",10,
-                                    db "Input: ",0
-    formato_peso                    db "%lli"
+    formato_numero                    db "%lli"
     mensaje_primer_numero           db "%lli",0
     mensaje_numero                  db " - %lli",0
     mensaje_salto_linea             db "",10,0
@@ -67,19 +67,45 @@ section     .data
     vector_pos      times 100       dq 0
     posiscion_pos                   dq 0
     mensaje_final                   db "Los siguientes paquetes seran enviados a sus correspondientes destinos:",0
+    contador_objetos               dq 0
 
 section     .bss
-    input    resb   500    
-    destino  resb   1
-    peso     resq   1
+    input                   resb   500    
+    destino                 resb   1
+    peso                    resq   1
+    cantidad_objetos       resq   1
 
 section     .text
 main:
+    mov rcx,mensaje_ingresar_objetos
+    sub rsp,32
+    call printf
+    add rsp,32
+ingresarObjetos:
+    mov rcx,input
+    sub rsp,32
+    call gets
+    add rsp,32
 
+    mov rcx,input
+    mov rdx,formato_numero
+    mov r8,cantidad_objetos
+    sub rsp,32
+    call sscanf
+    add rsp,32
+
+    call validarObjetos
+    cmp rax,0
+    je ingresarObjetos
+
+
+mensajeIngresarDestino:
+    inc qword[contador_objetos]
     mov rcx,mensaje_ingresar_destino
     sub rsp,32
     call printf
     add rsp,32
+
 
 ingresarDestino:
     mov byte[destino],0
@@ -113,7 +139,7 @@ ingresoPeso:
     add rsp,32
 
     mov rcx,input
-    mov rdx,formato_peso
+    mov rdx,formato_numero
     mov r8,peso
     sub rsp,32
     call sscanf
@@ -121,25 +147,13 @@ ingresoPeso:
 
     call validarPeso
     cmp rax,0
-    cmp rax,0
     je ingresoPeso ;Si el peso es p<=0 o p>11 pido devuelta un peso valido
 
     call agregarPaqueteADestino
-        
-    mov rcx,mensaje_ingresar_mas_paquetes
-    sub rsp,32
-    call printf
-    add rsp,32
-
-    mov rcx,input
-    sub rsp,32
-    call gets
-    add rsp,32
     
-    cmp byte[input],"S"
-    je main
-    cmp byte[input],"M"
-    je ingresoPesoMensaje
+    mov rax,[cantidad_objetos]
+    cmp qword[contador_objetos],rax
+    jl mensajeIngresarDestino
 
     call clearScreen
 
@@ -183,7 +197,8 @@ clearScreen:
         dec rdi
         cmp rdi,0
         jne clear
-    ret    
+    ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
 ;             VALIDAR DESTINO                ;
@@ -224,6 +239,27 @@ validarPeso:
 pesoInvalido:
     ;Peso no es valido
     mov rcx,mensaje_peso_invalido
+    sub rsp,32
+    call printf
+    add rsp,32
+    mov rax,0
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                            ;
+;               VALIDAR OBJETOS              ;
+;                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+validarObjetos:
+    ;verificando que 0<n<=20,
+    mov rax,1
+    cmp qword[cantidad_objetos],0
+    jle objetosInvalidos ;Si es menor igual a 0 es invalido
+    cmp qword[cantidad_objetos],20
+    jg objetosInvalidos
+    ret
+objetosInvalidos:
+    mov rcx,mensaje_objetos_invalido
     sub rsp,32
     call printf
     add rsp,32
