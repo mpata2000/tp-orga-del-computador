@@ -34,12 +34,12 @@ section     .data
                                     db "Input: ",0
     mensaje_objetos_invalido        db "La cantidad de objetos no es valida. Se pueden enviar de 1 a 20 objetos (0<n<=20)",10,
                                     db "Intente nuevamente: ",0
-    mensaje_ingresar_destino        db ",------------------------------------------------,",10,
-                                    db "| Ingrese el destino. Los posibles destinos son: |",10,
-                                    db "|  > [M] Mar del Plata                           |",10,
-                                    db "|  > [B] Bariloche                               |",10,
-                                    db "|  > [P] Posadas                                 |",10,
-                                    db "'------------------------------------------------'",10,
+    mensaje_ingresar_destino        db ",--------------------------------------------------------------,",10,
+                                    db "| Ingrese el destino del objeto %2i. Los posibles destinos son: |",10,
+                                    db "|  > [M] Mar del Plata                                         |",10,
+                                    db "|  > [B] Bariloche                                             |",10,
+                                    db "|  > [P] Posadas                                               |",10,
+                                    db "'--------------------------------------------------------------'",10,
                                     db "Input: ",0
     mensaje_destino_invalido        db "El destino no es valido. Los posibles destinos son:",10,
                                     db " > [M] Mar del Plata                               ",10,
@@ -47,38 +47,39 @@ section     .data
                                     db " > [P] Posadas                                     ",10,
                                     db "Intente nuevamente: ",0
     mensaje_ingresar_peso           db ",-----------------------------------------------------------,",10,
-                                    db "| Ingrese el peso del objeto con destino a [%c]              |",10,
+                                    db "| Ingrese el peso del objeto %2i con destino a [%c]           |",10,
                                     db "| El peso deberia estar entre el 1 y 11 inclusive (0<p<=11) |",10,
                                     db "'-----------------------------------------------------------'",10,
                                     db "Input: ",0
     mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11).",10,
                                     db "Intente nuevamente: ",0
-    formato_numero                  db "%lli",0
-    mensaje_primer_numero           db "%lli",0
-    mensaje_test_numero             db " T:%lli ",0
-    mensaje_numero                  db " - %lli",0
+    formato_numero                  db "%i",0
+    mensaje_primer_numero           db "%i",0
+    mensaje_numero                  db " - %i",0
     mensaje_salto_linea             db "",10,0
+    mensaje_final                   db "Los siguientes paquetes seran enviados a sus correspondientes destinos:",0
+    formato_destino                 db 10,"Paquete [%i] destino %s: ",0
+    ;Vectores Destino
     mensaje_mdq                     db "Mar del Plata",0
-    vector_mdq      times 100       dq 0
+    vector_mdq      times 100       dd 0
     posiscion_mdq                   dq 0
     mensaje_bar                     db "Bariloche",0
-    vector_bar      times 100       dq 0
+    vector_bar      times 100       dd 0
     posiscion_bar                   dq 0
     mensaje_pos                     db "Posadas",0
-    vector_pos      times 100       dq 0
+    vector_pos      times 100       dd 0
     posiscion_pos                   dq 0
-    mensaje_final                   db "Los siguientes paquetes seran enviados a sus correspondientes destinos:",0
-    contador_objetos                dq 0
+    ;Contadores
+    contador_objetos                dd 0
     contador_peso                   dq 0
-    contador_paquetes               dq 0
-    formato_destino                 db 10,"Paquete [%lli] destino %s: ",0
+    contador_paquetes               dd 0
 
 section     .bss
     input                   resb   500   
     output                  resb   100  
     destino                 resb   1
-    peso                    resq   1
-    cantidad_objetos        resq   1
+    peso                    resd   1
+    cantidad_objetos        resd   1
 
 section     .text
 main:
@@ -105,8 +106,9 @@ ingresarObjetos:
 
 
 mensajeIngresarDestino:
-    inc qword[contador_objetos]
+    inc dword[contador_objetos]
     mov rcx,mensaje_ingresar_destino
+    mov rdx,[contador_objetos]
     sub rsp,32
     call printf
     add rsp,32
@@ -132,32 +134,18 @@ ingresarDestino:
 
 ingresoPesoMensaje:
     mov rcx,mensaje_ingresar_peso
-    mov rdx,[destino]
+    mov rdx,[contador_objetos]
+    mov r8,[destino]
     sub rsp,32
     call printf
     add rsp,32
 
-ingresoPeso:
-    mov rcx,input
-    sub rsp,32
-    call gets
-    add rsp,32
-
-    mov rcx,input
-    mov rdx,formato_numero
-    mov r8,peso
-    sub rsp,32
-    call sscanf
-    add rsp,32
-
-    call validarPeso
-    cmp rax,0
-    je ingresoPeso ;Si el peso es p<=0 o p>11 pido devuelta un peso valido
+    call ingresarPeso
 
     call agregarPaqueteADestino
     
-    mov rax,[cantidad_objetos]
-    cmp qword[contador_objetos],rax
+    mov eax,[cantidad_objetos]
+    cmp dword[contador_objetos],eax
     jl mensajeIngresarDestino
 
     call clearScreen
@@ -230,25 +218,40 @@ destinoValido:
     ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
-;                VALIDAR PESO                ;
+;               INGRESAR PESO                ;
 ;                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-validarPeso:
-    ;verificando que 0<Pi<=11, devuelve rax=1 valido o rax=0 si es invalido
-    mov rax,1
-    cmp qword[peso],0
-    jle pesoInvalido ;Si es menor igual a 0 es invalido
-    cmp qword[peso],11
-    jg pesoInvalido
-    ret
 pesoInvalido:
     ;Peso no es valido
     mov rcx,mensaje_peso_invalido
     sub rsp,32
     call printf
     add rsp,32
-    mov rax,0
+
+ingresarPeso:
+    mov rcx,input
+    sub rsp,32
+    call gets
+    add rsp,32
+
+    mov rcx,input
+    mov rdx,formato_numero
+    mov r8,peso
+    sub rsp,32
+    call sscanf
+    add rsp,32
+    cmp rax,0
+
+validarPeso:
+    ;verificando que 0<Pi<=11, devuelve rax=1 valido o rax=0 si es invalido
+    mov rax,1
+    cmp dword[peso],0
+    jle pesoInvalido ;Si es menor igual a 0 es invalido
+    cmp dword[peso],11
+    jg pesoInvalido
     ret
+    
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
@@ -258,9 +261,9 @@ pesoInvalido:
 validarObjetos:
     ;verificando que 0<n<=20,
     mov rax,1
-    cmp qword[cantidad_objetos],0
+    cmp dword[cantidad_objetos],0
     jle objetosInvalidos ;Si es menor igual a 0 es invalido
-    cmp qword[cantidad_objetos],20
+    cmp dword[cantidad_objetos],20
     jg objetosInvalidos
     ret
 objetosInvalidos:
@@ -270,8 +273,6 @@ objetosInvalidos:
     add rsp,32
     mov rax,0
     ret
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
 ;             AGREGAR A PAQUETE              ;
@@ -333,8 +334,8 @@ imprimirDestino:
     je fin_imprimir_destino
 
 siguientePaquete:
-    inc qword[contador_paquetes]
-    mov qword[contador_peso],0
+    inc dword[contador_paquetes]
+    mov dword[contador_peso],0
 
     ; Imprimo el destino
     mov rcx,formato_destino
@@ -351,17 +352,17 @@ siguientePaquete:
     call printf
     add rsp,32
 
-    mov rax,qword[rbx + rsi*8]   ; Muevo el primer peso a rax
-    add qword[contador_peso],rax ;Sumo el primer peso del objeto que siempre va a ser menor a 11
+    mov eax,dword[rbx + rsi*8]   ; Muevo el primer peso a rax
+    add dword[contador_peso],eax ;Sumo el primer peso del objeto que siempre va a ser menor a 11
 
     inc rsi
     cmp rsi,qword[rdi]
     je fin_imprimir_destino
 
 loop_vector:
-    mov rax,qword[rbx + rsi*8]              ; Muevo el primer peso a rax
-    add qword[contador_peso],rax           ;Sumo el primer peso del objeto que siempre va a ser menor a 11
-    cmp qword[contador_peso],11         ; Comparo con el peso maximo por paquete
+    mov eax,dword[rbx + rsi*8]              ; Muevo el primer peso a rax
+    add dword[contador_peso],eax           ;Sumo el primer peso del objeto que siempre va a ser menor a 11
+    cmp dword[contador_peso],11         ; Comparo con el peso maximo por paquete
     jg siguientePaquete                    ; Si es mayor a 11 creo nuevo paquete
 
     mov rcx,mensaje_numero   ; Formato printf: %lli
