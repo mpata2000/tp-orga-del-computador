@@ -375,10 +375,10 @@ loop_vector:
     jne loop_vector          ; Si no es el mismo vuelvo al arranque del loop
 
 fin_imprimir_destino:
-    mov rcx,mensaje_salto_linea
-    sub rsp,32
-    call printf
-    add rsp,32
+    ;mov rcx,mensaje_salto_linea
+    ;sub rsp,32
+    ;call printf
+    ;add rsp,32
 
     ret
 
