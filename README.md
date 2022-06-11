@@ -29,8 +29,12 @@ Con en trabajo se proporciona un makefile para hacer la compilacion y la corrida
 
 ### Instalacion de makefile en windows
 
-1. Install the [chocolatey package manager](https://chocolatey.org/install)
-
-2. Run `choco install make`
+1. Instalar [chocolatey package manager](https://chocolatey.org/install)
+2. Correr en powershell como admin `choco install make`
+3. Correr en powershell como admin `choco install zip` (sin esto no correr make zip)
 
 Credito a: https://stackoverflow.com/questions/2532234/how-to-run-a-makefile-in-windows
+
+### Make zip
+
+El comando make zip se puede correr perfectamente desde WSL que tenga acceso al directorio con todos los archivos del tp
