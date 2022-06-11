@@ -25,7 +25,8 @@ A su vez existen tres destinos posibles: Mar del Plata, Bariloche y Posadas. El 
 
 Con en trabajo se proporciona un makefile para hacer la compilacion y la corrida del trabajo mas facil.
 
-`make run` corre el tp
+`make run` corre el tp (Al correrlo con make va a detectar un error de retorno que no es relevante)
+`make zip` comprime los archivos del tp
 
 ### Instalacion de makefile en windows
 
