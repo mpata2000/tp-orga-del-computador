@@ -53,12 +53,12 @@ section     .data
                                     db "Input: ",0
     mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11).",10,
                                     db "Intente nuevamente: ",0
-    formato_numero                  db "%i",0
     mensaje_primer_numero           db "%i",0
     mensaje_numero                  db " - %i",0
     mensaje_salto_linea             db "",10,0
     mensaje_final                   db "Los siguientes paquetes seran enviados a sus correspondientes destinos:",0
-    formato_destino                 db 10,"Paquete [%i] destino %s: ",0
+    mensaje_destino                 db 10,"Paquete [%i] destino %s: ",0
+    formato_numero                  db "%i",0
     ;Vectores Destino
     mensaje_mdq                     db "Mar del Plata",0
     vector_mdq       times 20       dd 0
@@ -401,7 +401,7 @@ calcularPeso:
 
 imprimirPaquete:
     ; Imprimo el destino
-    mov rcx,formato_destino
+    mov rcx,mensaje_destino
     mov rdx,[contador_paquetes]
     mov r8,r15
     sub rsp,32
@@ -430,11 +430,6 @@ imprimirPaquete:
         jl imprimirVector                       ; Si es menor hay mas pesos que imprimir
 
 finImprimirPaquete:
-    mov rcx,mensaje_salto_linea
-    sub rsp,32
-    call printf
-    add rsp,32
-
     mov rdi,qword[tamaño]
     cmp qword[indice],rdi       ; Comparo el indice con el tamaño del vector
     jl siguientePaquete         ; Si es menor puede haer mas pesos sin agregar a un paquete
