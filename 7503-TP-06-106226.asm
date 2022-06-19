@@ -54,27 +54,21 @@ section     .data
     mensaje_peso_invalido           db "El peso ingresado es invalido. El peso debe estar entre 0 y 11 inclusive(0<p<=11).",10,
                                     db "Intente nuevamente: ",0
     formato_numero                  db "%i",0
-    test_numero                  db " Ind : %i ",10,0
     mensaje_primer_numero           db "%i",0
     mensaje_numero                  db " - %i",0
     mensaje_salto_linea             db "",10,0
     mensaje_final                   db "Los siguientes paquetes seran enviados a sus correspondientes destinos:",0
     formato_destino                 db 10,"Paquete [%i] destino %s: ",0
-    formato_TEST_1                 db "PESO BUSCADO [%i]",10,0
-    formato_TEST_2                 db "SE AGREGA PESO EN POSICION [%i]",10,0
-    formato_TEST_3                 db "PESO ACTUAL [%i]",10,0
-    formato_TEST_4                 db "INDICE [%i]",10,0
-    formato_TEST_5                 db "Peso %i en %lli",10,0
     ;Vectores Destino
     mensaje_mdq                     db "Mar del Plata",0
     vector_mdq       times 20       dd 0
-    posiscion_mdq                   dq 0
+    tamaño_mdq                      dq 0
     mensaje_bar                     db "Bariloche",0
     vector_bar       times 20       dd 0
-    posiscion_bar                   dq 0
+    tamaño_bar                      dq 0
     mensaje_pos                     db "Posadas",0
     vector_pos       times 20       dd 0
-    posiscion_pos                   dq 0
+    tamaño_pos                      dq 0
     vector_imprimir  times 20       dd 0
     posicion_imprimir               dq 0
     ;Contadores
@@ -84,7 +78,6 @@ section     .data
 
 section     .bss
     input                   resb   500   
-    output                  resb   100
     indice                  resq   1
     tamaño                  resq   1
     destino                 resb   1
@@ -98,22 +91,8 @@ main:
     sub rsp,32
     call printf
     add rsp,32
-ingresarObjetos:
-    mov rcx,input
-    sub rsp,32
-    call gets
-    add rsp,32
 
-    mov rcx,input
-    mov rdx,formato_numero
-    mov r8,cantidad_objetos
-    sub rsp,32
-    call sscanf
-    add rsp,32
-
-    call validarObjetos
-    cmp rax,0
-    je ingresarObjetos
+    call ingresarObjetos
 
 
 mensajeIngresarDestino:
@@ -166,19 +145,19 @@ ingresoPesoMensaje:
     call puts
     add rsp,32
     ; Imprimo lo del destino Mar del Plata
-    mov rcx,posiscion_mdq
+    mov rcx,tamaño_mdq
     mov rdx,vector_mdq
     mov r8,mensaje_mdq
     call imprimirDestino
 
     ; Imprimo lo del destino Bariloche
-    mov rcx,posiscion_bar
+    mov rcx,tamaño_bar
     mov rdx,vector_bar
     mov r8,mensaje_bar
     call imprimirDestino
 
     ; Imprimo lo del destino Posadas
-    mov rcx,posiscion_pos
+    mov rcx,tamaño_pos
     mov rdx,vector_pos
     mov r8,mensaje_pos
     call imprimirDestino
@@ -233,7 +212,6 @@ destinoValido:
 ;                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 pesoInvalido:
-    ;Peso no es valido
     mov rcx,mensaje_peso_invalido
     sub rsp,32
     call printf
@@ -251,7 +229,9 @@ ingresarPeso:
     sub rsp,32
     call sscanf
     add rsp,32
-    cmp rax,0
+
+    cmp rax,1               ; Chequeo que se haya leido el peso
+    jne pesoInvalido
 
 validarPeso:
     ;verificando que 0<Pi<=11, devuelve rax=1 valido o rax=0 si es invalido
@@ -261,29 +241,43 @@ validarPeso:
     cmp dword[peso],11
     jg pesoInvalido
     ret
-    
-    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
-;               VALIDAR OBJETOS              ;
+;               INGRESAR OBJETOS             ;
 ;                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-validarObjetos:
-    ;verificando que 0<n<=20,
-    mov rax,1
-    cmp dword[cantidad_objetos],0
-    jle objetosInvalidos ;Si es menor igual a 0 es invalido
-    cmp dword[cantidad_objetos],20
-    jg objetosInvalidos
-    ret
 objetosInvalidos:
     mov rcx,mensaje_objetos_invalido
     sub rsp,32
     call printf
     add rsp,32
-    mov rax,0
+
+ingresarObjetos:
+    mov rcx,input
+    sub rsp,32
+    call gets
+    add rsp,32
+
+    mov rcx,input
+    mov rdx,formato_numero
+    mov r8,cantidad_objetos
+    sub rsp,32
+    call sscanf
+    add rsp,32
+
+    cmp rax,1               ; Chequeo que se haya leido el peso
+    jne objetosInvalidos
+
+validarObjetos:
+    ;verificando que 0<n<=20,
+    mov rax,1
+    cmp dword[cantidad_objetos],0
+    jle objetosInvalidos            ;Si es menor igual a 0 es invalido
+    cmp dword[cantidad_objetos],20
+    jg objetosInvalidos
     ret
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                            ;
 ;             AGREGAR A PAQUETE              ;
@@ -296,97 +290,87 @@ agregarPaqueteADestino:
     je agregarPaquetePOS
     ;Si no es ninguno de los 2 es mdq
 agregarPaqueteMDQ:
-    mov rdi,[posiscion_mdq]
+    mov rdi,[tamaño_mdq]
     mov edx,dword[peso]
     mov dword[vector_mdq + rdi*4],edx
     inc rdi
-    mov [posiscion_mdq],rdi
+    mov [tamaño_mdq],rdi
     ret
 agregarPaqueteBAR:
-    mov rdi,[posiscion_bar]
+    mov rdi,[tamaño_bar]
     mov edx,dword[peso]
     mov dword[vector_bar + rdi*4],edx
     inc rdi
-    mov [posiscion_bar],rdi
+    mov [tamaño_bar],rdi
     ret    
 agregarPaquetePOS:
-    mov rdi,[posiscion_pos]
+    mov rdi,[tamaño_pos]
     mov edx,dword[peso]
     mov dword[vector_pos + rdi*4],edx
     inc rdi
-    mov [posiscion_pos],rdi
+    mov [tamaño_pos],rdi
     ret
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                             ;
-;          IMPRIMIR VECORES DESTINOS          ;
-;                                             ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                      ;
+;          IMPRIMIR  DESTINOS          ;
+;                                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 imprimirDestino:
-    ; En rcx = tamaño_vector , rdx= ptr_vector y r8=destino
-    mov rax,qword[rcx]   ; Guardo temporalmente el tamaño del vector
-    mov rbx,rdx   ; Guardo el puntero al vector de pesos en rbx
-    mov r15,r8    ; Guardo destino en r15
-
+    ; En rcx = tamaño_vector , rdx = ptr_vector y r8 = string destino
+    mov rax,qword[rcx]      ; Guardo temporalmente el tamaño del vector
+    mov rbx,rdx             ; Guardo el puntero al vector de pesos en rbx
+    mov r15,r8              ; Guardo destino en r15
 
     mov qword[indice],0
     mov qword[tamaño],rax
-
-
-
-    ;Reviso si el destino tiene al menos un paquete
-    cmp qword[tamaño],0
-    je finImprimirDestino
-    inc dword[contador_paquetes]    ; Aumento la cantidad de paquetes
 
 siguientePaquete:
     mov dword[contador_peso],0
     mov dword[posicion_imprimir],0
 
     mov rdi,qword[tamaño]
-    cmp qword[indice],rdi       ; Comparo el indice con el tamaño del vector
-    jge finImprimirDestino         ; Si es igual no hay mas numeros e imprimo el paquete
+    cmp qword[indice],rdi           ; Comparo el indice con el tamaño del vector
+    jge finImprimirDestino          ; Si es igual no hay mas numeros e imprimo el paquete
 
 
     mov rsi,qword[indice]
-    mov eax,dword[rbx + rsi*4]  ; guardo el primer peso
-    inc qword[indice]           ; aumento el indice
+    mov eax,dword[rbx + rsi*4]      ; guardo el primer peso del paquete
+    inc qword[indice]               ; aumento el indice
 
-    cmp eax,0                   ; Chequeo que el peso sea distinto de 0
-    je siguientePaquete
+    cmp eax,0                       ; Chequeo que el peso sea distinto de 0 = borrado logico
+    jle siguientePaquete            ;
 
+    inc dword[contador_paquetes]    ; Aumento la cantidad de paquetes
 
     mov rsi,qword[posicion_imprimir]
     mov dword[vector_imprimir + rsi * 4],eax    ; Agrego el primer peso del paquete
     inc qword[posicion_imprimir]                ; Aumento el tamaño
 
     mov rdi,qword[tamaño]
-    cmp qword[indice],rdi       ; Comparo el indice con el tamaño del vector
-    jge imprimirPaquete         ; Si es igual no hay mas numeros e imprimo el paquete
+    cmp qword[indice],rdi           ; Comparo el indice con el tamaño del vector
+    jge imprimirPaquete             ; Si es igual no hay mas numeros e imprimo el paquete
 
     add dword[contador_peso],eax
 
 calcularPeso:
-    cmp dword[contador_peso],11
-    je imprimirPaquete               ; Si el peso es 11 imprimo de una
+    cmp dword[contador_peso],11   ; Comparo el peso del paquete con el limite de peso 11
+    je imprimirPaquete            ; Si el peso es 11 imprimo de una
 
-    mov eax,11
-    sub eax,dword[contador_peso]  ; calculo el proximo peso a buscar
+    mov eax,11                    ; Pongo el peso maximo
+    sub eax,dword[contador_peso]  ; calculo el proximo peso a buscar ( maximo - x )
     mov dword[peso_buscado],eax
-
-
-    
 
     mov rsi,qword[indice]
 
-
     buscadorPeso:
+        ; Se busca en el vector de pesos un peso igual a lo guardado en peso_buscado
+        ; Si lo encuentra se salta a agregarPeso y se lo agrega al vector_imprimir
+        ; Si no se encuentra se reduce peso_buscado hasta encontrarlo o sea igual a 0
+
         mov eax,dword[rbx + rsi*4]  ; guardo el primer peso en eax
 
-
-
-        cmp EAX,dword[peso_buscado]
+        cmp eax,dword[peso_buscado]
         je agregarPeso
 
         inc rsi           ; aumento el indice
@@ -397,14 +381,14 @@ calcularPeso:
         dec dword[peso_buscado]
 
         cmp dword[peso_buscado],0 
-        jle  imprimirPaquete           ; SI el peso buscado es igual a 0 paso al siguiente paquete
+        jle  imprimirPaquete            ; SI el peso buscado es igual a 0 paso al siguiente paquete
 
         mov rsi, qword[indice]          ; Restasblesco el indice
         jmp buscadorPeso                ; Loop obligatorio a buscador peso con nuevo peso
 
     agregarPeso:
-        mov eax,dword[rbx + rsi*4]  ; guardo el primer peso en eax
-        mov dword[rbx + rsi*4],0        ;borro el peso
+        mov eax,dword[rbx + rsi*4]      ; guardo el primer peso en eax
+        mov dword[rbx + rsi*4],0        ; Borrado logico del peso con 0
         add dword[contador_peso],eax
 
 
@@ -416,9 +400,6 @@ calcularPeso:
         jmp calcularPeso
 
 imprimirPaquete:
-    cmp qword[posicion_imprimir],0  ; Comparacion para evitar errores
-    je finImprimirDestino
-
     ; Imprimo el destino
     mov rcx,formato_destino
     mov rdx,[contador_paquetes]
@@ -427,10 +408,8 @@ imprimirPaquete:
     call printf
     add rsp,32
 
-
-    ; Imprimo el destino
     mov rcx,mensaje_primer_numero
-    mov edx,dword[vector_imprimir]       ; Imprimo el primer peso
+    mov edx,dword[vector_imprimir]    
     sub rsp,32
     call printf
     add rsp,32
@@ -455,11 +434,10 @@ finImprimirPaquete:
     sub rsp,32
     call printf
     add rsp,32
-    inc dword[contador_paquetes]    ; Aumento la cantidad de paquetes
 
     mov rdi,qword[tamaño]
     cmp qword[indice],rdi       ; Comparo el indice con el tamaño del vector
-    jl siguientePaquete
+    jl siguientePaquete         ; Si es menor puede haer mas pesos sin agregar a un paquete
 
 finImprimirDestino:
     ret
