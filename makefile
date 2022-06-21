@@ -8,7 +8,7 @@ FILES = 7503-TP-06-106226.asm makefile  README.md
 
 compile:
 	$(AS) -f $(NASMFLAGS) $(MAIN).asm -o $(OBJETO)
-	$(CC) ./$(OBJETO) -o $(EXEC)
+	$(CC) $(OBJETO) -o $(EXEC)
 
 run: compile
 	cls 			

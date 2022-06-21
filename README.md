@@ -39,3 +39,11 @@ Credito a: https://stackoverflow.com/questions/2532234/how-to-run-a-makefile-in-
 ### Make zip
 
 El comando make zip se puede correr perfectamente desde WSL que tenga acceso al directorio con todos los archivos del tp
+
+## Corrida Manual
+
+Se tienen que correr los siguentes comandos donde se requiere tener [nasm](https://www.nasm.us/) y [Mingw64](https://www.mingw-w64.org/downloads/):
+
+1. `nasm -f win64 7503-TP-06-106226.asm -o 7503-TP-06-106226.o`
+2. `gcc 7503-TP-06-106226.o -o 7503-TP-06-106226.exe`
+3. `./7503-TP-06-106226.exe`
