@@ -45,7 +45,7 @@ section     .data
                                     db " > [M] Mar del Plata                               ",10,
                                     db " > [B] Bariloche                                   ",10,
                                     db " > [P] Posadas                                     ",10,
-                                    db "Intente nuevamente: ",0
+                                    db "Intente nuevamente (la primera letra tiene que ser mayuscula): ",0
     mensaje_ingresar_peso           db ",-----------------------------------------------------------,",10,
                                     db "| Ingrese el peso del objeto %2i con destino a [%c]           |",10,
                                     db "| El peso deberia estar entre el 1 y 11 inclusive (0<p<=11) |",10,
@@ -70,7 +70,7 @@ section     .data
     vector_pos       times 20       dd 0
     tamaño_pos                      dq 0
     vector_imprimir  times 20       dd 0
-    posicion_imprimir               dq 0
+    tamaño_imprimir                 dq 0
     ;Contadores
     contador_objetos                dd 0
     contador_peso                   dd 0
@@ -93,7 +93,6 @@ main:
     add rsp,32
 
     call ingresarObjetos
-
 
 mensajeIngresarDestino:
     inc dword[contador_objetos]
@@ -144,6 +143,7 @@ ingresoPesoMensaje:
     sub rsp,32
     call puts
     add rsp,32
+
     ; Imprimo lo del destino Mar del Plata
     mov rcx,tamaño_mdq
     mov rdx,vector_mdq
@@ -162,7 +162,7 @@ ingresoPesoMensaje:
     mov r8,mensaje_pos
     call imprimirDestino
     call clearScreen
-    
+
     ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -318,6 +318,7 @@ agregarPaquetePOS:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 imprimirDestino:
     ; En rcx = tamaño_vector , rdx = ptr_vector y r8 = string destino
+
     mov rax,qword[rcx]      ; Guardo temporalmente el tamaño del vector
     mov rbx,rdx             ; Guardo el puntero al vector de pesos en rbx
     mov r15,r8              ; Guardo destino en r15
@@ -327,7 +328,7 @@ imprimirDestino:
 
 siguientePaquete:
     mov dword[contador_peso],0
-    mov dword[posicion_imprimir],0
+    mov dword[tamaño_imprimir],0
 
     mov rdi,qword[tamaño]
     cmp qword[indice],rdi           ; Comparo el indice con el tamaño del vector
@@ -343,9 +344,9 @@ siguientePaquete:
 
     inc dword[contador_paquetes]    ; Aumento la cantidad de paquetes
 
-    mov rsi,qword[posicion_imprimir]
+    mov rsi,qword[tamaño_imprimir]
     mov dword[vector_imprimir + rsi * 4],eax    ; Agrego el primer peso del paquete
-    inc qword[posicion_imprimir]                ; Aumento el tamaño
+    inc qword[tamaño_imprimir]                ; Aumento el tamaño
 
     mov rdi,qword[tamaño]
     cmp qword[indice],rdi           ; Comparo el indice con el tamaño del vector
@@ -392,10 +393,10 @@ calcularPeso:
         add dword[contador_peso],eax
 
 
-        mov rsi,qword[posicion_imprimir]
+        mov rsi,qword[tamaño_imprimir]
         mov dword[vector_imprimir + rsi * 4],eax  ; Agrego el peso al vector a imprimir
 
-        inc qword[posicion_imprimir]
+        inc qword[tamaño_imprimir]
 
         jmp calcularPeso
 
@@ -415,7 +416,7 @@ imprimirPaquete:
     add rsp,32
 
     mov rsi,1
-    cmp rsi,qword[posicion_imprimir]
+    cmp rsi,qword[tamaño_imprimir]
     je finImprimirPaquete
 
     imprimirVector:
@@ -426,7 +427,7 @@ imprimirPaquete:
         add rsp,32
 
         inc rsi
-        cmp rsi,qword[posicion_imprimir]
+        cmp rsi,qword[tamaño_imprimir]
         jl imprimirVector                       ; Si es menor hay mas pesos que imprimir
 
 finImprimirPaquete:
