@@ -47,3 +47,10 @@ Se tienen que correr los siguentes comandos donde se requiere tener [nasm](https
 1. `nasm -f win64 7503-TP-06-106226.asm -o 7503-TP-06-106226.o`
 2. `gcc 7503-TP-06-106226.o -o 7503-TP-06-106226.exe`
 3. `./7503-TP-06-106226.exe`
+
+
+## Correcion
+
+**Nota**: 9
+
+Deberia haber usado una matriz en vez de vetor_mdq, vector_pos y vecotr_bar. EG: en J=0 esta los objetos a mdq, en j=1 los objetos a posadas...
